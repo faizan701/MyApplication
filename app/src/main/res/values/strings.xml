@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">My Application</string>
+    <string name="welcome">Welcome</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="login">Login</string>
+    <string name="password">password</string>
+    <string name="already_a_member">Already a Member?</string>
+    <string name="email">email</string>
+    <string name="welcome_back">Welcome Back</string>
+    <string name="forgot_password">Forgot password</string>
+    <string name="Submit">Submit</string>
+    />
+    <string name="Remembered_password">Remembered password?</string>
+    />
+    <string name="login_page">login page</string>
+    />
+    login page
+</resources>
