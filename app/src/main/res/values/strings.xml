@@ -23,6 +23,7 @@
     <string name="login_failed">"Login failed"</string>
     <string name="row_description">"row_description"</string>
     <string name="add_item">"add_item"</string>
+
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
     <string name="second_fragment_label">Second Fragment</string>
@@ -65,6 +66,8 @@
         libero vel nunc consequat, quis tincidunt nisl eleifend. Cras bibendum enim a justo luctus
         vestibulum. Fusce dictum libero quis erat maximus, vitae volutpat diam dignissim.
     </string>
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
     />
     login page
 </resources>

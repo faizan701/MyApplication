@@ -1,6 +1,7 @@
 package com.example.myapplication;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
@@ -19,17 +20,20 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.HashMap;
-import java.util.Map;import java.util.Objects;
+import java.util.Map;
+import java.util.Objects;
 
 public class createrow extends AppCompatActivity {
 
-    EditText editText;
-    EditText editText2;
-    FloatingActionButton button;
+    EditText editTextTitle;
+    EditText editTextContent;
+    FloatingActionButton buttonSave;
     FirebaseAuth mAuth;
     FirebaseUser firebaseUser;
     FirebaseFirestore firestore;
     Toolbar toolbar;
+
+    private String documentId; // To store the document ID for editing
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -38,9 +42,9 @@ public class createrow extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_createrow);
 
-        editText = findViewById(R.id.editTextText1);
-        editText2 = findViewById(R.id.editTextText2);
-        button = findViewById(R.id.floatingActionButton);
+        editTextTitle = findViewById(R.id.editTextText1);
+        editTextContent = findViewById(R.id.editTextText2);
+        buttonSave = findViewById(R.id.floatingActionButton);
         toolbar = findViewById(R.id.toolbar2);
 
         mAuth = FirebaseAuth.getInstance();
@@ -51,35 +55,106 @@ public class createrow extends AppCompatActivity {
         Objects.requireNonNull(getSupportActionBar()).setDisplayShowTitleEnabled(true);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        button.setOnClickListener(view -> {
-            String text1 = editText.getText().toString().trim(); // Trim whitespace
-            String text2 = editText2.getText().toString().trim();
+        // Check if intent has data (for editing)
+        Intent intent = getIntent();
+        if (intent.hasExtra("documentId")) {
+            documentId = intent.getStringExtra("documentId");
+            loadNoteData(documentId); // Load existing note data
+        }
 
-            if (text1.isEmpty() || text2.isEmpty()) {
+        buttonSave.setOnClickListener(view -> {
+            String title = editTextTitle.getText().toString().trim();
+            String content = editTextContent.getText().toString().trim();
+
+            if (title.isEmpty() || content.isEmpty()) {
                 Toast.makeText(createrow.this, "Please enter both fields", Toast.LENGTH_SHORT).show();
-            } else if (text1.length() < 3) { // Example minimum length validation
+            } else if (title.length() < 3) {
                 Toast.makeText(createrow.this, "Title should be at least 3 characters long", Toast.LENGTH_SHORT).show();
             } else {
-                DocumentReference documentReference = firestore.collection("Notes")
-                        .document(firebaseUser.getUid())
-                        .collection("MyNotes")
-                        .document();
-
-                Map<String, Object> note = new HashMap<>();
-                note.put("Title", text1);
-                note.put("content", text2);
-
-
-                documentReference.set(note)
-                        .addOnSuccessListener(aVoid -> {
-                            Toast.makeText(createrow.this, "Note saved", Toast.LENGTH_SHORT).show();
-                            finish(); // Close createrow activity
-                        }).addOnFailureListener(e -> {
-                            Toast.makeText(createrow.this, "Failed to save note: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                            Log.e("createrow", "Error saving note", e); // Log the error
-                        });
+                if (documentId != null) {
+                    // Update existing note
+                    updateNote(documentId, title, content);
+                } else {
+                    // Create new note
+                    createNewNote(title, content);
+                }
             }
         });
+    }
+
+    private void loadNoteData(String documentId) {
+        if (firebaseUser != null) {
+            firestore.collection("Notes")
+                    .document(firebaseUser.getUid())
+                    .collection("MyNotes")
+                    .document(documentId)
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            FireBaseModel note = documentSnapshot.toObject(FireBaseModel.class);
+                            if (note != null) {
+                                editTextTitle.setText(note.getTitle());
+                                editTextContent.setText(note.getContent());
+                            }
+                        } else {
+                            Toast.makeText(createrow.this, "Note not found", Toast.LENGTH_SHORT).show();
+                            finish();
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(createrow.this, "Error loading note: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Log.e("createrow", "Error loading note", e);
+                        finish();
+                    });
+        }
+    }
+
+    private void updateNote(String documentId, String title, String content) {
+        if (firebaseUser != null) {
+            DocumentReference documentReference = firestore.collection("Notes")
+                    .document(firebaseUser.getUid())
+                    .collection("MyNotes")
+                    .document(documentId);
+
+            Map<String, Object> note = new HashMap<>();
+            note.put("Title", title);
+            note.put("content", content);
+
+            documentReference.update(note)
+                    .addOnSuccessListener(aVoid -> {
+                        Toast.makeText(createrow.this, "Note updated", Toast.LENGTH_SHORT).show();
+                        finish();
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(createrow.this, "Failed to update note: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Log.e("createrow", "Error updating note", e);
+                    });
+        }
+        setResult(RESULT_OK); // Signal to LandingPage that data has changed
+        finish();
+    }
+
+    private void createNewNote(String title, String content) {
+        if (firebaseUser != null) {
+            DocumentReference documentReference = firestore.collection("Notes")
+                    .document(firebaseUser.getUid())
+                    .collection("MyNotes")
+                    .document();
+
+            Map<String, Object> note = new HashMap<>();
+            note.put("Title", title);
+            note.put("content", content);
+
+            documentReference.set(note)
+                    .addOnSuccessListener(aVoid -> {
+                        Toast.makeText(createrow.this, "Note saved", Toast.LENGTH_SHORT).show();
+                        finish();
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(createrow.this, "Failed to save note: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Log.e("createrow", "Error saving note", e);
+                    });
+        }
     }
 
     @Override

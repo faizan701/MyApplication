@@ -4,11 +4,11 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.LayoutInflater;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,11 +24,13 @@ import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 
 public class LandingPage extends AppCompatActivity {
     private FirebaseAuth mAuth;
+    private FirebaseFirestore firestore;
     private FirestoreRecyclerAdapter<FireBaseModel, CompanyViewHolder> adapter;
 
     @SuppressLint("MissingInflatedId")
@@ -40,7 +42,7 @@ public class LandingPage extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         FirebaseUser firebaseUser = mAuth.getCurrentUser();
-        FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+        firestore = FirebaseFirestore.getInstance();
 
         RecyclerView recyclerView = findViewById(R.id.companyRecyclerView);
         Toolbar myToolbar = findViewById(R.id.myToolbar);
@@ -53,7 +55,7 @@ public class LandingPage extends AppCompatActivity {
         FloatingActionButton fab = findViewById(R.id.floatingActionButton);
         fab.setOnClickListener(view -> {
             Intent intent = new Intent(LandingPage.this, createrow.class);
-            startActivity(intent);
+            startActivityForResult(intent, 1); // Use startActivityForResult to get a result from createrow
         });
 
         if (firebaseUser != null) {
@@ -70,8 +72,15 @@ public class LandingPage extends AppCompatActivity {
                 @Override
                 protected void onBindViewHolder(@NonNull CompanyViewHolder holder, int position, @NonNull FireBaseModel model) {
                     holder.TitleTextView.setText(model.getTitle());
-                    holder.ContentTextView.setText(model.getcontent());
+                    holder.ContentTextView.setText(model.getContent());
 
+                    // Set click listener for item actions (edit/delete)
+                    holder.itemView.setOnClickListener(view -> {
+                        int pos = holder.getBindingAdapterPosition();
+                        if (pos != RecyclerView.NO_POSITION) {
+                            showActionDialog(pos);
+                        }
+                    });
                 }
 
                 @NonNull
@@ -134,6 +143,47 @@ public class LandingPage extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    private void showActionDialog(int position) {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Choose Action")
+                .setItems(new String[]{"Edit", "Delete"}, (dialog, which) -> {
+                    if (which == 0) {
+                        handleEditAction(position);
+                    } else if (which == 1) {
+                        handleDeleteAction(position);
+                    }
+                })
+                .show();
+    }
+
+    private void handleEditAction(int position) {
+        DocumentSnapshot documentSnapshot = adapter.getSnapshots().getSnapshot(position);
+        String documentId = documentSnapshot.getId();
+
+        Intent intent = new Intent(LandingPage.this, createrow.class);
+        intent.putExtra("documentId", documentId);
+        startActivityForResult(intent, 1); // Use startActivityForResult to get a result from createrow
+    }
+
+    private void handleDeleteAction(int position) {
+        DocumentSnapshot documentSnapshot = adapter.getSnapshots().getSnapshot(position);
+        String documentId = documentSnapshot.getId();
+
+        FirebaseUser firebaseUser = mAuth.getCurrentUser();
+        if (firebaseUser != null) {
+            firestore.collection("Notes")
+                    .document(firebaseUser.getUid())
+                    .collection("MyNotes")
+                    .document(documentId)
+                    .delete()
+                    .addOnSuccessListener(aVoid -> Toast.makeText(LandingPage.this, "Note deleted successfully", Toast.LENGTH_SHORT).show())
+                    .addOnFailureListener(e -> {
+                        Log.w("LandingPage", "Error deleting document", e);
+                        Toast.makeText(LandingPage.this, "Error deleting note", Toast.LENGTH_SHORT).show();
+                    });
+        }
+    }
+
     private void performLogout() {
         mAuth.signOut();
         Intent intent = new Intent(LandingPage.this, MainActivity.class);
@@ -145,11 +195,19 @@ public class LandingPage extends AppCompatActivity {
         TextView TitleTextView;
         TextView ContentTextView;
 
-
         public CompanyViewHolder(@NonNull View itemView) {
             super(itemView);
             TitleTextView = itemView.findViewById(R.id.NameTextView);
-            ContentTextView = itemView.findViewById(R.id.notecontent);
+            ContentTextView = itemView.findViewById(R.id.noteContent);
+        }
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            adapter.notifyDataSetChanged(); // Refresh the adapter
         }
     }
 }
