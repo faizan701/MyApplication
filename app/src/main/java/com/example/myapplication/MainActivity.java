@@ -12,6 +12,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -52,8 +53,12 @@ public class MainActivity extends AppCompatActivity {
 
             if (isFieldEmpty(emailInput)) {
                 emailInput.setError("Email cannot be empty");
+            } else if (!isValidEmail(email)) {
+                emailInput.setError("Invalid email format");
             } else if (isFieldEmpty(passwordInput)) {
                 passwordInput.setError("Password cannot be empty");
+            } else if (password.length() < 6) {
+                passwordInput.setError("Password must be at least 6 characters");
             } else {
                 performLogin(email, password);
             }
@@ -75,26 +80,40 @@ public class MainActivity extends AppCompatActivity {
         return editText.getText().toString().trim().isEmpty();
     }
 
+    private boolean isValidEmail(String email) {
+        Pattern pattern = Pattern.compile("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$");
+        return pattern.matcher(email).matches();
+    }
+
     private void performLogin(String email, String password) {
+        // Disable login button to prevent multiple clicks
+        findViewById(R.id.button).setEnabled(false);
+
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
+                    // Re-enable login button
+                    findViewById(R.id.button).setEnabled(true);
+
                     if (task.isSuccessful()) {
                         // Sign in success, update UI with the signed-in user's information
                         FirebaseUser user = mAuth.getCurrentUser();
                         if (user != null && user.isEmailVerified()) {
-                            Toast.makeText(MainActivity.this, "Login successful!", Toast.LENGTH_SHORT).show();
+                            showToast("Login successful!");
                             Intent intent = new Intent(MainActivity.this, LandingPage.class);
                             startActivity(intent);
                             finish(); // Optional: Finish the login activity
                         } else {
                             // User's email is not verified
-                            Toast.makeText(MainActivity.this, "Please verify your email before logging in.", Toast.LENGTH_SHORT).show();
+                            showToast("Please verify your email before logging in.");
                         }
                     } else {
                         // If sign in fails, display a message to the user.
-                        Toast.makeText(MainActivity.this, "Authentication failed.",
-                                Toast.LENGTH_SHORT).show();
+                        showToast("Authentication failed.");
                     }
                 });
+    }
+
+    private void showToast(String message) {
+        Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
     }
 }
