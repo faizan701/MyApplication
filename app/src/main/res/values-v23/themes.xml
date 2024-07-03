@@ -1,9 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-
+    <!-- Settings for API 23 and above -->
     <style name="Theme.MyApplication" parent="Base.Theme.MyApplication">
-        <!-- Transparent system bars for edge-to-edge. -->
-        <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar">?attr/isLightTheme</item>
+        <!-- You can remove the windowLightStatusBar attribute here as it's already defined in the base theme -->
     </style>
 </resources>

@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,6 +13,8 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+
+import java.util.Locale;
 
 public class sign_up extends AppCompatActivity {
 
@@ -31,7 +34,7 @@ public class sign_up extends AppCompatActivity {
         emailInput = findViewById(R.id.editTextText1);
         passwordInput = findViewById(R.id.editTextTextPassword1);
         Button signupButton = findViewById(R.id.button);
-        Button loginButton = findViewById(R.id.button2);
+        TextView loginButton = findViewById(R.id.textView2);
 
         loginButton.setOnClickListener(view -> {
             Intent intent = new Intent(sign_up.this, MainActivity.class);
@@ -45,7 +48,7 @@ public class sign_up extends AppCompatActivity {
         });
 
         signupButton.setOnClickListener(view -> {
-            String email = emailInput.getText().toString();
+            String email = emailInput.getText().toString().toLowerCase(Locale.ROOT);
             String password = passwordInput.getText().toString();
 
             if (isFieldEmpty(emailInput)) {

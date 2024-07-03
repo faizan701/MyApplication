@@ -4,23 +4,26 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.LayoutInflater;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -28,7 +31,12 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+
 public class LandingPage extends AppCompatActivity {
+
     private FirebaseAuth mAuth;
     private FirebaseFirestore firestore;
     private FirestoreRecyclerAdapter<FireBaseModel, CompanyViewHolder> adapter;
@@ -42,9 +50,7 @@ public class LandingPage extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         FirebaseUser firebaseUser = mAuth.getCurrentUser();
-        firestore = FirebaseFirestore.getInstance();
-
-        RecyclerView recyclerView = findViewById(R.id.companyRecyclerView);
+        firestore = FirebaseFirestore.getInstance();RecyclerView recyclerView = findViewById(R.id.companyRecyclerView);
         Toolbar myToolbar = findViewById(R.id.myToolbar);
         setSupportActionBar(myToolbar);
 
@@ -55,7 +61,7 @@ public class LandingPage extends AppCompatActivity {
         FloatingActionButton fab = findViewById(R.id.floatingActionButton);
         fab.setOnClickListener(view -> {
             Intent intent = new Intent(LandingPage.this, createrow.class);
-            startActivityForResult(intent, 1); // Use startActivityForResult to get a result from createrow
+            startActivityForResult(intent, 1);
         });
 
         if (firebaseUser != null) {
@@ -74,7 +80,6 @@ public class LandingPage extends AppCompatActivity {
                     holder.TitleTextView.setText(model.getTitle());
                     holder.ContentTextView.setText(model.getContent());
 
-                    // Set click listener for item actions (edit/delete)
                     holder.itemView.setOnClickListener(view -> {
                         int pos = holder.getBindingAdapterPosition();
                         if (pos != RecyclerView.NO_POSITION) {
@@ -93,7 +98,6 @@ public class LandingPage extends AppCompatActivity {
 
             recyclerView.setAdapter(adapter);
 
-            // Add error listener to the query
             query.addSnapshotListener((snapshot, e) -> {
                 if (e != null) {
                     Log.w("LandingPage", "Error fetching documents.", e);
@@ -102,28 +106,27 @@ public class LandingPage extends AppCompatActivity {
             });
 
         } else {
-            // Handle case where user is not logged in
             Toast.makeText(LandingPage.this, "Please log in to view notes.", Toast.LENGTH_SHORT).show();
             startActivity(new Intent(LandingPage.this, MainActivity.class));
-            finish(); // Finish LandingPage if not logged in
+            finish();
         }
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        if (adapter != null) { // Start listening only if adapter is initialized
+        if (adapter != null) {
             adapter.startListening();
         }
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (adapter != null) {
-            adapter.stopListening();
-        }
-    }
+//    @Override
+//    protected void onStop() {
+//        super.onStop();
+//        if (adapter != null) {
+//            adapter.stopListening();
+//        }
+//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -144,9 +147,9 @@ public class LandingPage extends AppCompatActivity {
     }
 
     private void showActionDialog(int position) {
-        new androidx.appcompat.app.AlertDialog.Builder(this)
+        new AlertDialog.Builder(this)
                 .setTitle("Choose Action")
-                .setItems(new String[]{"Edit", "Delete"}, (dialog, which) -> {
+                .setItems(new CharSequence[]{"Edit", "Delete"}, (dialog, which) -> {
                     if (which == 0) {
                         handleEditAction(position);
                     } else if (which == 1) {
@@ -162,7 +165,7 @@ public class LandingPage extends AppCompatActivity {
 
         Intent intent = new Intent(LandingPage.this, createrow.class);
         intent.putExtra("documentId", documentId);
-        startActivityForResult(intent, 1); // Use startActivityForResult to get a result from createrow
+        startActivityForResult(intent, 1);
     }
 
     private void handleDeleteAction(int position) {
@@ -175,8 +178,7 @@ public class LandingPage extends AppCompatActivity {
                     .document(firebaseUser.getUid())
                     .collection("MyNotes")
                     .document(documentId)
-                    .delete()
-                    .addOnSuccessListener(aVoid -> Toast.makeText(LandingPage.this, "Note deleted successfully", Toast.LENGTH_SHORT).show())
+                    .delete().addOnSuccessListener(aVoid -> Toast.makeText(LandingPage.this, "Note deleted successfully", Toast.LENGTH_SHORT).show())
                     .addOnFailureListener(e -> {
                         Log.w("LandingPage", "Error deleting document", e);
                         Toast.makeText(LandingPage.this, "Error deleting note", Toast.LENGTH_SHORT).show();
@@ -191,23 +193,44 @@ public class LandingPage extends AppCompatActivity {
         finish();
     }
 
-    public static class CompanyViewHolder extends RecyclerView.ViewHolder {
+    static class CompanyViewHolder extends RecyclerView.ViewHolder {
         TextView TitleTextView;
         TextView ContentTextView;
 
-        public CompanyViewHolder(@NonNull View itemView) {
+        CompanyViewHolder(@NonNull View itemView) {
             super(itemView);
             TitleTextView = itemView.findViewById(R.id.NameTextView);
             ContentTextView = itemView.findViewById(R.id.noteContent);
+
+            // Ensure you are using MaterialCardView here
+            MaterialCardView cardView = itemView.findViewById(R.id.cardView);
+            if (cardView != null) {
+                // Your existing color randomization logic
+                List<Integer> colors = Arrays.asList(
+                        R.color.color1,
+                        R.color.color2,
+                        R.color.color3,
+                        R.color.color4,
+                        R.color.color5,
+                        R.color.color6,
+                        R.color.color7,
+                        R.color.color8,
+                        R.color.color9,
+                        R.color.color10
+                );
+                int randomColor = colors.get(new Random().nextInt(colors.size()));
+                cardView.setCardBackgroundColor(ContextCompat.getColor(itemView.getContext(), randomColor));
+            }
         }
     }
+
 
     @SuppressLint("NotifyDataSetChanged")
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
-            adapter.notifyDataSetChanged(); // Refresh the adapter
+            adapter.notifyDataSetChanged();
         }
     }
 }

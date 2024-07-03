@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">My Application</string>
+    <string name="app_name">My Notes</string>
     <string name="welcome">Welcome</string>
     <string name="sign_up">Sign Up</string>
     <string name="login">Login</string>
@@ -12,7 +12,7 @@
     />
     <string name="Remembered_password">Remembered password?</string>
     />
-    <string name="login_page">login page</string>
+    <string name="login_page"> login page</string>
     <string name="Title_activity_login">LoginActivity</string>
     <string name="prompt_email">Email</string>
     <string name="prompt_password">Password</string>
