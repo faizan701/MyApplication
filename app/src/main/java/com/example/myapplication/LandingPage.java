@@ -61,7 +61,7 @@ public class LandingPage extends AppCompatActivity {
         FloatingActionButton fab = findViewById(R.id.floatingActionButton);
         fab.setOnClickListener(view -> {
             Intent intent = new Intent(LandingPage.this, createrow.class);
-            startActivityForResult(intent, 1);
+            startActivity(intent);
         });
 
         if (firebaseUser != null) {
@@ -224,13 +224,4 @@ public class LandingPage extends AppCompatActivity {
         }
     }
 
-
-    @SuppressLint("NotifyDataSetChanged")
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK) {
-            adapter.notifyDataSetChanged();
-        }
-    }
 }

@@ -3,9 +3,13 @@ package com.example.myapplication;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -31,7 +35,7 @@ public class createrow extends AppCompatActivity {
     FirebaseUser firebaseUser;
     FirebaseFirestore firestore;
     Toolbar toolbar;
-
+    TextView textView5;
     private String documentId; // To store the document ID for editing
 
     @SuppressLint("MissingInflatedId")
@@ -42,8 +46,8 @@ public class createrow extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         firebaseUser = mAuth.getCurrentUser();
+
         if (firebaseUser == null) {
-            // If user is null, redirect to login or handle appropriately
             Toast.makeText(this, "User not authenticated", Toast.LENGTH_SHORT).show();
             finish();
             return;
@@ -55,6 +59,7 @@ public class createrow extends AppCompatActivity {
         editTextContent = findViewById(R.id.editTextText2);
         buttonSave = findViewById(R.id.floatingActionButton);
         toolbar = findViewById(R.id.toolbar2);
+        textView5 = findViewById(R.id.textView5);
 
         setSupportActionBar(toolbar);
         Objects.requireNonNull(getSupportActionBar()).setDisplayShowTitleEnabled(true);
@@ -66,6 +71,25 @@ public class createrow extends AppCompatActivity {
             documentId = intent.getStringExtra("documentId");
             loadNoteData(documentId); // Load existing note data
         }
+
+        // Add TextWatcher to editTextTitle to update sum
+        editTextTitle.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Not used in this case
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Not used in this case
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                int sum = calculateSumOfNumbers(s.toString());
+                textView5.setText("Sum : " + sum);
+            }
+        });
 
         buttonSave.setOnClickListener(view -> {
             String title = editTextTitle.getText().toString().trim();
@@ -99,6 +123,8 @@ public class createrow extends AppCompatActivity {
                         if (note != null) {
                             editTextTitle.setText(note.getTitle());
                             editTextContent.setText(note.getContent());
+                            int sum = calculateSumOfNumbers(note.getTitle());
+                            textView5.setText("Sum of numbers: " + sum);
                         }
                     } else {
                         Toast.makeText(createrow.this, "Note not found", Toast.LENGTH_SHORT).show();
@@ -156,9 +182,58 @@ public class createrow extends AppCompatActivity {
                 });
     }
 
+    private int calculateSumOfNumbers(String text) {
+        int sum = 0;
+        String[] words = text.split("\\s+"); // Split by whitespace
+        for (String word : words) {
+            try {
+                int number = Integer.parseInt(word);
+                sum += number;
+            } catch (NumberFormatException ignored) {
+                // Ignore non-number words
+            }
+        }
+        return sum;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return true;
+    }
+
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
+            // Handle the back button press
+            String title = editTextTitle.getText().toString().trim();
+            String content = editTextContent.getText().toString().trim();
+
+            if (title.isEmpty() && content.isEmpty()) {
+                // Both title and content are empty, just finish the activity
+                finish();
+            } else {
+                if (title.isEmpty() || content.isEmpty()) {
+                    Toast.makeText(createrow.this, "Please enter both fields", Toast.LENGTH_SHORT).show();
+                } else if (title.length() < 3) {
+                    Toast.makeText(createrow.this, "Title should be at least 3 characters long", Toast.LENGTH_SHORT).show();
+                } else {
+                    if (documentId != null) {
+                        // Update existing note
+                        updateNote(documentId, title, content);
+                    } else {
+                        // Create new note
+                        createNewNote(title, content);
+                    }
+                }
+            }
+            return true;
+        } else if (item.getItemId() == R.id.action_logout) {
+            // Handle the logout action
+            mAuth.signOut();
+            Intent intent = new Intent(this, LandingPage.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
             finish();
             return true;
         }

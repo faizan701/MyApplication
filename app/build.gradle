@@ -66,6 +66,7 @@ dependencies {
     // Room
     implementation 'androidx.room:room-runtime:2.6.1'
     implementation libs.filament.android
+    implementation libs.activity
 
     // Test dependencies
     testImplementation 'junit:junit:4.13.2'
