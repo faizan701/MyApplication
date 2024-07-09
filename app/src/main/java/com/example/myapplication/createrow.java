@@ -87,7 +87,12 @@ public class createrow extends AppCompatActivity {
             @Override
             public void afterTextChanged(Editable s) {
                 int sum = calculateSumOfNumbers(s.toString());
-                textView5.setText("Sum : " + sum);
+                if (getNumberOfNumbers(s.toString()) >= 2) {
+                    textView5.setText("Sum : " + sum);
+                    textView5.setVisibility(TextView.VISIBLE);
+                } else {
+                    textView5.setVisibility(TextView.GONE);
+                }
             }
         });
 
@@ -196,6 +201,20 @@ public class createrow extends AppCompatActivity {
         return sum;
     }
 
+    private int getNumberOfNumbers(String text) {
+        int count = 0;
+        String[] words = text.split("\\s+");
+        for (String word : words) {
+            try {
+                Integer.parseInt(word);
+                count++;
+            } catch (NumberFormatException ignored) {
+                // Ignore non-number words
+            }
+        }
+        return count;
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
@@ -213,8 +232,8 @@ public class createrow extends AppCompatActivity {
                 // Both title and content are empty, just finish the activity
                 finish();
             } else {
-                if (title.isEmpty() || content.isEmpty()) {
-                    Toast.makeText(createrow.this, "Please enter both fields", Toast.LENGTH_SHORT).show();
+                if (title.isEmpty()) {
+                    Toast.makeText(createrow.this, "Please enter Title", Toast.LENGTH_SHORT).show();
                 } else if (title.length() < 3) {
                     Toast.makeText(createrow.this, "Title should be at least 3 characters long", Toast.LENGTH_SHORT).show();
                 } else {
