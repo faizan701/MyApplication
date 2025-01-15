@@ -1,5 +1,5 @@
 [versions]
-agp = "8.5.0"
+agp = "8.7.3"
 annotationVersion = "1.8.0"
 firebaseBom = "33.1.1"
 firebaseUiAuth = "8.0.2"
