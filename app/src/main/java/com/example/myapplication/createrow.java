@@ -129,7 +129,7 @@ public class createrow extends AppCompatActivity {
                             editTextTitle.setText(note.getTitle());
                             editTextContent.setText(note.getContent());
                             int sum = calculateSumOfNumbers(note.getTitle());
-                            textView5.setText("Sum of numbers: " + sum);
+                            textView5.setText("Sum : " + sum);
                         }
                     } else {
                         Toast.makeText(createrow.this, "Note not found", Toast.LENGTH_SHORT).show();
@@ -247,7 +247,8 @@ public class createrow extends AppCompatActivity {
                 }
             }
             return true;
-        } else if (item.getItemId() == R.id.action_logout) {
+        }
+        else if (item.getItemId() == R.id.action_logout) {
             // Handle the logout action
             mAuth.signOut();
             Intent intent = new Intent(this, LandingPage.class);

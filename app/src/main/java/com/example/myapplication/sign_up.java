@@ -2,19 +2,22 @@ package com.example.myapplication;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Patterns;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-
-import java.util.Locale;
 
 public class sign_up extends AppCompatActivity {
 
@@ -48,12 +51,14 @@ public class sign_up extends AppCompatActivity {
         });
 
         signupButton.setOnClickListener(view -> {
-            String email = emailInput.getText().toString().toLowerCase(Locale.ROOT);
+            String email = emailInput.getText().toString().trim();
             String password = passwordInput.getText().toString();
 
-            if (isFieldEmpty(emailInput)) {
+            if (TextUtils.isEmpty(email)) {
                 emailInput.setError("Email cannot be empty");
-            } else if (isFieldEmpty(passwordInput)) {
+            } else if (!isValidEmail(email)) {
+                emailInput.setError("Invalid email address");
+            } else if (TextUtils.isEmpty(password)) {
                 passwordInput.setError("Password cannot be empty");
             } else {
                 createUserAccount(email, password);
@@ -61,8 +66,8 @@ public class sign_up extends AppCompatActivity {
         });
     }
 
-    private boolean isFieldEmpty(EditText editText) {
-        return editText.getText().toString().trim().isEmpty();
+    private boolean isValidEmail(CharSequence target) {
+        return (!TextUtils.isEmpty(target) && Patterns.EMAIL_ADDRESS.matcher(target).matches());
     }
 
     private void createUserAccount(String email, String password) {
@@ -87,10 +92,10 @@ public class sign_up extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             Toast.makeText(sign_up.this, "Verification email sent. Please verify and login.",
                                     Toast.LENGTH_LONG).show();
-                            // Redirect to login page
+                            // Redirect to login page after successful email sending
                             Intent intent = new Intent(sign_up.this, MainActivity.class);
                             startActivity(intent);
-                            finish(); // Optional: Finish the sign-up activity
+                            finish(); // Finish the sign-up activity
                         } else {
                             Toast.makeText(sign_up.this, "Failed to send verification email.",
                                     Toast.LENGTH_SHORT).show();
