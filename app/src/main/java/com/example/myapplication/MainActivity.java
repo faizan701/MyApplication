@@ -6,12 +6,15 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+
 import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
@@ -30,10 +33,16 @@ public class MainActivity extends AppCompatActivity {
 
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
-            // User is already logged in, redirect to LandingPage
-            Intent intent = new Intent(MainActivity.this, LandingPage.class);
-            startActivity(intent);
-            finish(); // Optional: Finish the current activity
+            // Check if user is already logged in and email is verified
+            if (currentUser.isEmailVerified()) {
+                // User is logged in and verified, redirect to LandingPage
+                Intent intent = new Intent(MainActivity.this, LandingPage.class);
+                startActivity(intent);
+                finish(); // Optional: Finish the current activity
+            } else {
+                // User is logged in but email not verified, prompt to verify
+                showToast("Please verify your email before proceeding.");
+            }
         }
 
         emailInput = findViewById(R.id.editTextText1);
@@ -95,16 +104,19 @@ public class MainActivity extends AppCompatActivity {
                     findViewById(R.id.button).setEnabled(true);
 
                     if (task.isSuccessful()) {
-                        // Sign in success, update UI with the signed-in user's information
+                        // Sign in success, check if email is verified
                         FirebaseUser user = mAuth.getCurrentUser();
-                        if (user != null && user.isEmailVerified()) {
-                            showToast("Login successful!");
-                            Intent intent = new Intent(MainActivity.this, LandingPage.class);
-                            startActivity(intent);
-                            finish(); // Optional: Finish the login activity
-                        } else {
-                            // User's email is not verified
-                            showToast("Please verify your email before logging in.");
+                        if (user != null) {
+                            if (user.isEmailVerified()) {
+                                // User is logged in and verified, redirect to LandingPage
+                                showToast("Login successful!");
+                                Intent intent = new Intent(MainActivity.this, LandingPage.class);
+                                startActivity(intent);
+                                finish(); // Optional: Finish the login activity
+                            } else {
+                                // User is logged in but email not verified
+                                showToast("Please verify your email before logging in.");
+                            }
                         }
                     } else {
                         // If sign in fails, display a message to the user.
